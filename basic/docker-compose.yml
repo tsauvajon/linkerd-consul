@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  hello:
+    build: ./hello/
+    ports:
+      - "8100:8100"
+    environment:
+      - SERVICE_NAME=hello
+
+
+  consul:
+    image: consul:1.7.3
+    ports:
+      - "8500:8500"
+
+
+  registrator:
+    image: gliderlabs/registrator:v7
+    command: ['consul://consul:8500']
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    depends_on:
+      - consul
+
+
+  linkerd:
+    image: buoyantio/linkerd:1.7.2
+    command: ['/conf.yaml']
+    ports:
+        - 9990:9990
+        - 4140:4140
+    volumes:
+        - ./linkerd.conf.yml:/conf.yaml
+    depends_on:
+        - registrator
